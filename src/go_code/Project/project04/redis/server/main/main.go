@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"go_code/Project/project04/redis/client/model"
-	utils2 "go_code/Project/project04/redis/common/utils"
-	"io"
 	"net"
 )
 
@@ -14,19 +12,11 @@ func process(conn net.Conn) {
 	//读客户端发送的信息
 	for {
 		//这里我们将读取整个数据包，直接封装成一个函数readPkg()，返回Message,Err
-		tf := &utils2.Transfer{Conn: conn}
-		msg, err := tf.ReadPkg()
+		//这里调用总控，创建一个
+		processor := &Processor{Conn: conn}
+		err := processor.process2()
 		if err != nil {
-			if err == io.EOF {
-				fmt.Println("客户端退出，服务器端也退出")
-				return
-			} else {
-				fmt.Println("readPkg() err=", err)
-				return
-			}
-		}
-		err = serverProcessMes(conn, &msg)
-		if err != nil {
+			fmt.Println("客户端和服务器通讯协程错误 , err=", err)
 			return
 		}
 	}
@@ -38,10 +28,14 @@ func initUserDao() {
 	model.MyUserDao = model.NewUserDao(redisPool)
 }
 
-func main() {
+func init() {
 	//当服务器启动时，我们就去初始化我们的redis连接池
 	initPool()
 	initUserDao()
+}
+
+func main() {
+
 	//提示信息
 	fmt.Println("服务器在8889监听。。。。。。")
 	listen, err := net.Listen("tcp", "0.0.0.0:8889")

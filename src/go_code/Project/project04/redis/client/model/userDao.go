@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/garyburd/redigo/redis"
+	"go_code/Project/project04/redis/common/message"
 )
 
 //定义一个UserDao结构体
@@ -26,7 +27,7 @@ func NewUserDao(pool *redis.Pool) (userDao *UserDao) {
 
 //思考一下UserDao应该提供哪些方法给我们
 //1.根据用户id 返回一个User实例 + err
-func (this *UserDao) getUserById(conn redis.Conn, id int) (user User, err error) {
+func (this *UserDao) getUserById(conn redis.Conn, id int) (user message.User, err error) {
 	//通过给定id 去 redis查询这个用户
 	res, err := redis.String(conn.Do("HGet", "users", id))
 	if err != nil {
@@ -49,7 +50,7 @@ func (this *UserDao) getUserById(conn redis.Conn, id int) (user User, err error)
 //1.Login 完成对用户的验证
 //2.如果用户的id和pwd都正确，则返回一个user实例
 //3.如果用户的id或pwd有错误，则返回对应的错误信息
-func (this *UserDao) Login(userId int, userPwd string) (user User, err error) {
+func (this *UserDao) Login(userId int, userPwd string) (user message.User, err error) {
 	//先从UserDao的连接池中取出一根连接
 	conn := this.pool.Get()
 	defer conn.Close()
@@ -61,6 +62,33 @@ func (this *UserDao) Login(userId int, userPwd string) (user User, err error) {
 	//这时证明这个用户时获取到
 	if user.UserPwd != userPwd {
 		err = ERROR_USER_PWD_FALSE
+		return
+	}
+	return
+}
+
+//完成对注册的校验
+//1.Login 完成对用户的验证
+//2.如果用户的id和pwd都正确，则返回一个user实例
+//3.如果用户的id或pwd有错误，则返回对应的错误信息
+func (this *UserDao) Register(user *message.User) (err error) {
+	//先从UserDao的连接池中取出一根连接
+	conn := this.pool.Get()
+	defer conn.Close()
+	_, err = this.getUserById(conn, user.UserId)
+	if err == nil {
+		err = ERROR_USER_EXISTS
+		return
+	}
+	//这时，说明id在redis还没有，则可以完成注册
+	data, err := json.Marshal(user)
+	if err != nil {
+		return
+	}
+	//入库
+	_, err = conn.Do("HSet", "users", user.UserId, string(data))
+	if err != nil {
+		fmt.Println("保存注册用户错误 err=", err)
 		return
 	}
 	return
