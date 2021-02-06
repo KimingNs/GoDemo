@@ -1,7 +1,9 @@
 package process
 
 import (
+	"encoding/json"
 	"fmt"
+	"go_code/Project/project04/redis/common/message"
 	"go_code/Project/project04/redis/common/utils"
 	"net"
 	"os"
@@ -47,6 +49,19 @@ func ServerProcessMes(conn net.Conn) {
 			return
 		}
 		//如果读取到消息，又是下一步处理逻辑
-		fmt.Println("mes=", mes)
+		switch mes.Type {
+		//有人上线了
+		case message.NotifyUserStatusMesType:
+			//1.取出 NotifyUserStatusMes
+			var notifyUserStatusMes message.NotifyUserStatusMes
+			err = json.Unmarshal([]byte(mes.Data), &notifyUserStatusMes)
+			if err != nil {
+				fmt.Println("59json.Unmarshal() err=", err)
+			}
+			//2.把这个用户的信息，状态保存到客户map[int]User中
+			updateUserStatus(&notifyUserStatusMes)
+		default:
+			fmt.Println("mes=", mes)
+		}
 	}
 }

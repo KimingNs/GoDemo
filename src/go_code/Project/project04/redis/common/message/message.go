@@ -1,10 +1,11 @@
 package message
 
 const (
-	LoginMesType       = "LoginMes"
-	LoginResType       = "LoginResMes"
-	RegisterMesType    = "RegisterMes"
-	RegisterResMesType = "RegisterResMes"
+	LoginMesType            = "LoginMes"
+	LoginResType            = "LoginRes"
+	RegisterMesType         = "RegisterMes"
+	RegisterResType         = "RegisterRes"
+	NotifyUserStatusMesType = "NotifyOthersMes"
 )
 
 type Message struct {
@@ -33,4 +34,10 @@ type RegisterMes struct {
 
 type RegisterMesRes struct {
 	Res ResStruct `json:"res"`
+}
+
+//为了配合服务器端推送用户状态变化的消息
+type NotifyUserStatusMes struct {
+	UserId     int `json:"user_id"`
+	UserStatus int `json:"user_status"`
 }

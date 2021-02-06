@@ -64,6 +64,7 @@ func (this *UserDao) Login(userId int, userPwd string) (user message.User, err e
 		err = message.ERROR_USER_PWD_FALSE
 		return
 	}
+	user.UserStatus = message.ZAIXIAN
 	return
 }
 

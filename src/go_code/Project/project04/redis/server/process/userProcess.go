@@ -16,6 +16,54 @@ type UserProcess struct {
 	UserId int `json:"user_id"`
 }
 
+//这里我们编写通知所有在线用户的方法
+//userId 要通知其他
+func (this *UserProcess) NotifyOthers() {
+	//遍历UsersOnline，然后一个个的发送 NotifyUserStatusMes
+	userMap := userManger.GetUserOnlineAll()
+	for id, up := range userMap {
+		if id == this.UserId {
+			continue
+		}
+		up.Notify(up.UserId)
+	}
+}
+
+func (this *UserProcess) Notify(userId int) {
+	//组装我们的NotifyUserStatusMes
+	var mes message.Message
+	mes.Type = message.NotifyUserStatusMesType
+
+	var notifuUserStatusMes message.NotifyUserStatusMes
+	notifuUserStatusMes.UserId = userId
+	notifuUserStatusMes.UserStatus = message.ZAIXIAN
+
+	//将notifyUserStatusMes序列化
+	data, err := json.Marshal(notifuUserStatusMes)
+	if err != nil {
+		fmt.Println("json.Marshal err=", err)
+		return
+	}
+	//将序列化后的notifyUserStatusMes赋值给mes.data
+	mes.Data = string(data)
+
+	//对mes 再次进行序列化
+	data, err = json.Marshal(mes)
+	if err != nil {
+		fmt.Println("json.Marshal err=", err)
+		return
+	}
+
+	//发送，创建我们Transfer实例，发送
+	tf := &utils.Transfer{Conn: this.Conn}
+	err = tf.WritePkg(data)
+	if err != nil {
+		fmt.Println("notifyMe err=", err)
+		return
+	}
+	return
+}
+
 //编写一个ServerProcessLogin 函数
 func (this *UserProcess) ServerProcessLogin(mes *message.Message) (err error) {
 
@@ -52,6 +100,10 @@ func (this *UserProcess) ServerProcessLogin(mes *message.Message) (err error) {
 		//将登录成功的用户的userId 赋给this
 		this.UserId = loginMes.User.UserId
 		userManger.AddUserOnline(this)
+
+		//通知其他用户该登录用户上线了
+		this.NotifyOthers()
+
 		//将当前在线用户的id放入到loginResMes的userId
 		//遍历userManger.UserOnline
 		for id, _ := range userManger.UsersOnline {
@@ -93,7 +145,7 @@ func (this *UserProcess) ServerProcessRegister(mes *message.Message) (err error)
 	}
 	//1.先声明一个resMes
 	var resMes message.Message
-	resMes.Type = message.RegisterResMesType
+	resMes.Type = message.RegisterResType
 	//2.在声明一个LoginResMes，并完成赋值
 
 	//在声明一个LoginResMes
