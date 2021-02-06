@@ -152,17 +152,20 @@ func (this *UserProcess) Login(userId int, userPwd string) (loginMesRes message.
 	if loginMesRes.Res.Code == message.SUCCESS {
 		//登录成功
 		//可以显示当前在线用户列表，遍历loginResMes.UserId
+		fmt.Println("当前在线用户列表如下：")
 		for _, v := range loginMesRes.UserId {
 			//如果我们要求不显示自己在线，
 			if v == userId {
 				continue
 			}
-			fmt.Printf("当前用户id：%d\n", v)
+			fmt.Printf("用户id：%d\n", v)
 			//完成对 客户端的onlineUsers 的初始化
 			user := &message.User{UserId: v, UserStatus: message.ZAIXIAN}
 			onlineUsers[v] = user
 
 		}
+		fmt.Println()
+		fmt.Println()
 
 		go ServerProcessMes(conn)
 		for {

@@ -18,14 +18,13 @@ type UserProcess struct {
 
 //这里我们编写通知所有在线用户的方法
 //userId 要通知其他
-func (this *UserProcess) NotifyOthers() {
+func (this *UserProcess) NotifyOthers(userId int) {
 	//遍历UsersOnline，然后一个个的发送 NotifyUserStatusMes
-	userMap := userManger.GetUserOnlineAll()
-	for id, up := range userMap {
+	for id, up := range userManger.UsersOnline {
 		if id == this.UserId {
 			continue
 		}
-		up.Notify(up.UserId)
+		up.Notify(userId)
 	}
 }
 
@@ -61,7 +60,6 @@ func (this *UserProcess) Notify(userId int) {
 		fmt.Println("notifyMe err=", err)
 		return
 	}
-	return
 }
 
 //编写一个ServerProcessLogin 函数
@@ -102,7 +100,7 @@ func (this *UserProcess) ServerProcessLogin(mes *message.Message) (err error) {
 		userManger.AddUserOnline(this)
 
 		//通知其他用户该登录用户上线了
-		this.NotifyOthers()
+		this.NotifyOthers(this.UserId)
 
 		//将当前在线用户的id放入到loginResMes的userId
 		//遍历userManger.UserOnline

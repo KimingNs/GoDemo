@@ -11,7 +11,7 @@ var onlineUsers map[int]*message.User = make(map[int]*message.User, 10)
 //显示当前在线用户
 func outputOnlineUser() {
 	//遍历一把onlineUsers
-	fmt.Println("当前在线用户列表：")
+	fmt.Println("当前在线用户列表如下：")
 	for id, user := range onlineUsers {
 		fmt.Printf("用户id：%d,用户状态:%d\n", id, user.UserStatus)
 	}
