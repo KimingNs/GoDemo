@@ -12,6 +12,8 @@ import (
 type UserProcess struct {
 	//字段
 	Conn net.Conn `json:"conn"`
+	//增加一个字段表示该conn 属于哪个用户
+	UserId int `json:"user_id"`
 }
 
 //编写一个ServerProcessLogin 函数
@@ -30,21 +32,37 @@ func (this *UserProcess) ServerProcessLogin(mes *message.Message) (err error) {
 	resMes.Type = message.LoginResType
 
 	//在声明一个LoginResMes
-	var loginResMes message.LoginResMes
+	var loginMesRes message.LoginMesRes
 
 	//我们需要到redis数据库去完成验证
 	//1.使用model.MyUserDao 到redis去验证
 	user, err := model.MyUserDao.Login(loginMes.User.UserId, loginMes.User.UserPwd)
 	if err != nil {
-		loginResMes.Code = 101
-		loginResMes.Error = err.Error()
+		if err == message.ERROR_USER_NOT_EXISTS {
+			loginMesRes.Res.Code = message.USER_NOT_EXISTS
+		} else if err == message.ERROR_USER_PWD_FALSE {
+			loginMesRes.Res.Code = message.USER_PWD_FALSE
+		} else {
+			loginMesRes.Res.Code = message.ERROR
+		}
+		loginMesRes.Res.Error = err.Error()
 	} else {
-		loginResMes.Code = 100
+		loginMesRes.Res.Code = message.SUCCESS
+		//这里用户登录成功，我们就把该登陆成功的用户放入到userManger中
+		//将登录成功的用户的userId 赋给this
+		this.UserId = loginMes.User.UserId
+		userManger.AddUserOnline(this)
+		//将当前在线用户的id放入到loginResMes的userId
+		//遍历userManger.UserOnline
+		for id, _ := range userManger.UsersOnline {
+			loginMesRes.UserId = append(loginMesRes.UserId, id)
+		}
+
 		fmt.Println("user=", user)
 	}
 
 	//将loginResMes序列化
-	data, err := json.Marshal(loginResMes)
+	data, err := json.Marshal(loginMesRes)
 	if err != nil {
 		fmt.Println("json.Marshal err=", err)
 		return
@@ -79,21 +97,25 @@ func (this *UserProcess) ServerProcessRegister(mes *message.Message) (err error)
 	//2.在声明一个LoginResMes，并完成赋值
 
 	//在声明一个LoginResMes
-	var registerResMes message.RegisterResMes
+	var registerMesRes message.RegisterMesRes
 
 	//我们需要到redis数据库去完成验证
 	//1.使用model.MyUserDao 到redis去验证
 	err = model.MyUserDao.Register(&registerMes.User)
 	if err != nil {
-		registerResMes.Code = 102
-		registerResMes.Error = err.Error()
+		if err == message.ERROR_USER_EXISTS {
+			registerMesRes.Res.Code = message.USER_EXISTS
+		} else {
+			registerMesRes.Res.Code = message.ERROR
+		}
+		registerMesRes.Res.Error = err.Error()
 	} else {
-		registerResMes.Code = 100
+		registerMesRes.Res.Code = message.SUCCESS
 		fmt.Println("user=", registerMes)
 	}
 
 	//将loginResMes序列化
-	data, err := json.Marshal(registerResMes)
+	data, err := json.Marshal(registerMesRes)
 	if err != nil {
 		fmt.Println("json.Marshal err=", err)
 		return

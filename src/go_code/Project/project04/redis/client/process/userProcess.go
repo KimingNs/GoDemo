@@ -14,7 +14,7 @@ type UserProcess struct {
 	//暂时不需要字段
 }
 
-func (this *UserProcess) Register(userId int, userPwd string, userName string) (registerResMes message.RegisterResMes, err error) {
+func (this *UserProcess) Register(userId int, userPwd string, userName string) (registerMesRes message.RegisterMesRes, err error) {
 	//1.连接到服务器
 	conn, err := net.Dial("tcp", "localhost:8889")
 	if err != nil {
@@ -66,18 +66,18 @@ func (this *UserProcess) Register(userId int, userPwd string, userName string) (
 	}
 
 	//将mes的Data部分反序列化成RegisterResMes
-	err = json.Unmarshal([]byte(mes.Data), &registerResMes)
-	if registerResMes.Code == 100 {
+	err = json.Unmarshal([]byte(mes.Data), &registerMesRes)
+	if registerMesRes.Res.Code == message.SUCCESS {
 		fmt.Println("注册成功")
 	} else {
-		fmt.Println("registerResMes.error=", registerResMes.Error)
+		fmt.Println("registerResMes.error=", registerMesRes.Res.Error)
 	}
 	os.Exit(0)
 	return
 }
 
 //写一个函数，完成登录
-func (this *UserProcess) Login(userId int, userPwd string) (loginResMes message.LoginResMes, err error) {
+func (this *UserProcess) Login(userId int, userPwd string) (loginMesRes message.LoginMesRes, err error) {
 	//1.连接到服务器
 	conn, err := net.Dial("tcp", "localhost:8889")
 	if err != nil {
@@ -132,7 +132,7 @@ func (this *UserProcess) Login(userId int, userPwd string) (loginResMes message.
 	_, err = conn.Write(data)
 	if err != nil {
 		fmt.Println("132Login.conn.Write() err=", err)
-		return loginResMes, err
+		return loginMesRes, err
 	}
 	tf := &utils.Transfer{Conn: conn}
 	mes, err = tf.ReadPkg()
@@ -142,22 +142,26 @@ func (this *UserProcess) Login(userId int, userPwd string) (loginResMes message.
 		return
 	}
 
-	err = json.Unmarshal([]byte(mes.Data), &loginResMes)
-
+	err = json.Unmarshal([]byte(mes.Data), &loginMesRes)
 	if err != nil {
 		fmt.Println("146Login.json.Unmarshal() err=", err)
 		return
 	}
 	//这里我们还需要在客户端启动一个协程
 	//该协程保持在和服务器端的通讯，如果服务器有数据推送给客户端，则接收并显示在客户端的终端
-	if loginResMes.Code == 100 {
+	if loginMesRes.Res.Code == message.SUCCESS {
 		//登录成功
+		//可以显示当前在线用户列表，遍历loginResMes.UserId
+		for _, v := range loginMesRes.UserId {
+			fmt.Printf("用户id：%d\n", v)
+		}
+
 		go ServerProcessMes(conn)
 		for {
 			ShowMenu()
 		}
 	} else {
-		fmt.Println("loginResMes.err=", loginResMes.Error)
+		fmt.Println("loginResMes.err=", loginMesRes.Res.Error)
 	}
 	return
 }
