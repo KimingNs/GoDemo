@@ -46,7 +46,7 @@ func ServerProcessMes(conn net.Conn) {
 		fmt.Println("客户端正在等待读取服务器发送的消息")
 		mes, err := tf.ReadPkg()
 		if err != nil {
-			fmt.Println("tf.ReadPkg() err=", err)
+			fmt.Println("server.go.tf.ReadPkg() err=", err)
 			return
 		}
 		//如果读取到消息，又是下一步处理逻辑

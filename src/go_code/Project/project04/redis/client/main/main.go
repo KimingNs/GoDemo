@@ -5,6 +5,10 @@ import (
 	"go_code/Project/project04/redis/client/process"
 )
 
+/**
+问题未解决：客户端完成登录操作后无法同时开启端口对服务器端传输数据导致端口关闭
+*/
+
 //定义两个变量，一个表示用户id，一个表示用户的密码
 var userId int
 var userPwd string

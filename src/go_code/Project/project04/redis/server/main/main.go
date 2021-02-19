@@ -10,16 +10,16 @@ func process(conn net.Conn) {
 	//这里需要延时关闭conn
 	defer conn.Close()
 	//读客户端发送的信息
-	for {
-		//这里我们将读取整个数据包，直接封装成一个函数readPkg()，返回Message,Err
-		//这里调用总控，创建一个
-		processor := &Processor{Conn: conn}
-		err := processor.process2()
-		if err != nil {
-			fmt.Println("客户端和服务器通讯协程错误 , err=", err)
-			return
-		}
+	//for {
+	//这里我们将读取整个数据包，直接封装成一个函数readPkg()，返回Message,Err
+	//这里调用总控，创建一个
+	processor := &Processor{Conn: conn}
+	err := processor.process2()
+	if err != nil {
+		fmt.Println("客户端和服务器通讯协程错误 , err=", err)
+		return
 	}
+	//}
 }
 
 //这里我们编写一个函数，完成对UserDao的初始化任务

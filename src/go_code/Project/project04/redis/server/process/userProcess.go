@@ -21,7 +21,7 @@ type UserProcess struct {
 func (this *UserProcess) NotifyOthers(userId int) {
 	//遍历UsersOnline，然后一个个的发送 NotifyUserStatusMes
 	for id, up := range userManger.UsersOnline {
-		if id == this.UserId {
+		if id == userId {
 			continue
 		}
 		up.Notify(userId)
@@ -33,12 +33,12 @@ func (this *UserProcess) Notify(userId int) {
 	var mes message.Message
 	mes.Type = message.NotifyUserStatusMesType
 
-	var notifuUserStatusMes message.NotifyUserStatusMes
-	notifuUserStatusMes.UserId = userId
-	notifuUserStatusMes.UserStatus = message.ZAIXIAN
+	var notifyUserStatusMes message.NotifyUserStatusMes
+	notifyUserStatusMes.UserId = userId
+	notifyUserStatusMes.UserStatus = message.ZAIXIAN
 
 	//将notifyUserStatusMes序列化
-	data, err := json.Marshal(notifuUserStatusMes)
+	data, err := json.Marshal(notifyUserStatusMes)
 	if err != nil {
 		fmt.Println("json.Marshal err=", err)
 		return
