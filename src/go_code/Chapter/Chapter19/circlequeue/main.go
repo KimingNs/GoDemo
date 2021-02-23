@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
 )
 
 //使用一个结构体管理环形队列
@@ -28,7 +29,7 @@ func (this *CircleQueue) Pop() (val int, err error) {
 		return -1, errors.New("queue empty")
 	}
 	val = this.array[this.head]
-	this.head = (this.head - 1) % this.maxSize
+	this.head = (this.head + 1) % this.maxSize
 	return
 }
 
@@ -41,7 +42,7 @@ func (this *CircleQueue) ListQueue() {
 	//设计一个辅助的变量，指向head
 	tempHead := this.head
 	for i := 0; i < size; i++ {
-		fmt.Printf("arr[%d]=%d\n", i, this.array[i])
+		fmt.Printf("arr[%d]=%d\n", tempHead, this.array[tempHead])
 		tempHead = (tempHead + 1) % this.maxSize
 	}
 }
@@ -65,6 +66,8 @@ func main() {
 	//先创建一个队列
 	queue := &CircleQueue{
 		maxSize: 5,
+		head:    0,
+		tail:    0,
 	}
 	var key string
 	var val int
@@ -90,12 +93,12 @@ func main() {
 			if err != nil {
 				fmt.Println(err.Error())
 			} else {
-				fmt.Println("当前队列队尾数字为：", val)
+				fmt.Println("当前取出队列数字为：", val)
 			}
 		case "show":
 			queue.ListQueue()
 		case "exit":
-			break
+			os.Exit(0)
 		}
 	}
 }
